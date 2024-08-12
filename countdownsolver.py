@@ -1,3 +1,4 @@
+import sys
 operations = ["", "+", "-", "*", "/"]
 
 class Operation:
@@ -6,61 +7,79 @@ class Operation:
     MULTIPLY = 3
     DIVIDE = 4
 
-class GraphNode:
-    def __init__(self, num, inNode, operation):
-        self.num = num
-        self.inNode = inNode
-        self.operation = operation
+class NumberNode:
+    def __init__(self, nums, indexOne, indexTwo, operation, prevNode):
+        self.nums = nums.copy()
         self.output = 0
-        if(self.inNode != None):
-            if(self.inNode.operation == 0):
-                self.output = self.num
-            else:
-                if(self.operation == Operation.ADD):
-                    self.output = self.inNode.output + self.num
-                if(self.operation == Operation.SUBTRACT):
-                    self.output = self.inNode.output - self.num
-                if(self.operation == Operation.MULTIPLY):
-                    self.output = self.inNode.output * self.num
-                if(self.operation == Operation.DIVIDE):
-                    self.output = int(self.inNode.output / self.num)
+        if(indexOne == -1):
+            self.prevNode = None
+            self.createNodes()
+            return
+        self.one = nums[indexOne]
+        self.two = nums[indexTwo]
+        self.operation = operation
+        self.prevNode = prevNode
+        if(self.operation == Operation.ADD):
+            self.output = self.one + self.two
+        if(self.operation == Operation.SUBTRACT):
+            self.output = self.one - self.two
+        if(self.operation == Operation.DIVIDE):
+            if(self.two == 0):
+                return
+            self.output = self.one / self.two
+        if(self.operation == Operation.MULTIPLY):
+            self.output = self.one * self.two
 
-        if(self.output == target):
-            node = self
-            while(node.inNode.operation != 0):
-                print(node.inNode.output, operations[node.operation], node.num, "=", node.output)
-                node = node.inNode
-            exit()
+        if(self.output < 0 or self.output % 1 != 0):
+            return
+        
+        self.output = int(self.output)
+        self.nums.remove(self.one)
+        self.nums.remove(self.two)
+        self.nums.append(self.output)
+
         global minDifference
-        global minNode
         if(abs(self.output - target) < minDifference):
-            minNode = self
             minDifference = abs(self.output-target)
-        self.nodes = []
-    
-    def generateNodes(self, nums):
-        if(len(nums) <= 1):
-            return
-        if(self.operation == Operation.DIVIDE and self.inNode.output % self.num != 0):
-            return
-        for num in nums:
-            newNums = nums.copy()
-            newNums.remove(num)
-            for i in range(1, 5):
-                self.nodes.append(GraphNode(num, self, i))
-                self.nodes[-1].generateNodes(newNums)
+            global minNode
+            minNode = self
 
+        if(len(self.nums) == 1):
+            if(self.output == target):
+                print("Target Found")
+                node = self
+                while(node.prevNode != None):    
+                    print(node.one, operations[node.operation], node.two, "=", node.output)
+                    node = node.prevNode
+                exit()
+            return
+        self.createNodes()
 
-nums = [10, 7, 8, 9, 75, 25]
-target = 546
+    def createNodes(self):
+        for i in range(len(self.nums)):
+            for j in range(len(self.nums)):
+                if(i == j):
+                    continue
+                for o in range(1, 5):
+                    NumberNode(self.nums, i, j, o, self)
+
 minDifference = 1000000000
 minNode = None
 
-startNode = GraphNode(-1, None, 0)
-startNode.generateNodes(nums)
+if __name__ == "__main__":
+    if(len(sys.argv) != 8):
+        print("Invalid number of arguments: target num1,...,num6")
+        exit()
+    
+    target = int(sys.argv[1])
+    nums = []
+    for i in range(2,8):
+        nums.append(int(sys.argv[i]))
 
+    startNode = NumberNode(nums, -1, -1, 0, None)
 
-node = minNode
-while(node.inNode != None):
-    print(node.num, operations[node.operation], node.inNode.output, "=", node.output)
-    node = node.inNode
+    print("Closest found:", minNode.output)
+    node = minNode
+    while(node.prevNode != None):    
+        print(node.one, operations[node.operation], node.two, "=", node.output)
+        node = node.prevNode
