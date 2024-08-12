@@ -33,6 +33,8 @@ class NumberNode:
         if(self.output < 0 or self.output % 1 != 0):
             return
         
+        if(self.output == 0):
+            return
         self.output = int(self.output)
         self.nums.remove(self.one)
         self.nums.remove(self.two)
@@ -61,19 +63,22 @@ class NumberNode:
                 if(i == j):
                     continue
                 for o in range(1, 5):
+                    if(o == 1 or o == 3):       #addition and multiplication is communitative so we dont need to do twice
+                        if(j > i):
+                            continue
                     NumberNode(self.nums, i, j, o, self)
 
 minDifference = 1000000000
 minNode = None
 
 if __name__ == "__main__":
-    if(len(sys.argv) != 8):
-        print("Invalid number of arguments: target num1,...,num6")
+    if(len(sys.argv) < 3):
+        print("Invalid number of arguments: target [nums]")
         exit()
     
     target = int(sys.argv[1])
     nums = []
-    for i in range(2,8):
+    for i in range(2,len(sys.argv)):
         nums.append(int(sys.argv[i]))
 
     startNode = NumberNode(nums, -1, -1, 0, None)
